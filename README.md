@@ -55,3 +55,36 @@ The GAN models show good results apart from the biggan varient with over 90% acc
 
 OVERALL RESULTS: These results depict that we do require a solution which does not depend on unique model characteristics as different models leave different fingerprints as is the case in families as well as subfamiles, Thus, we need to explore solutions which eliminates these unique traits left by the image generation models and focus on more of the style part of the images generated to make a futuristic ideal fake detector, thus we transition to the second paper discussing potential solutions to these problems
 
+2) paper 2 is considered next as a potential fix to the limitations of findings depicted in the previous experimentation. The underlying issue was since the neural net was trained on only dalle images which 1 type of a diffusion model, the neural net had become heavily biased to the characteristic features (frequency spikes) of specific dalle images and thus performs poorly on not only different family gans but shows undesirable results even on the same family diffusion models.
+
+The proposed approach in the paper revolves around creating an embedding first of the image using a pre-trained vision transformer and then using a classification technique to classify the embeddings as real or fake. The idea is to not feed the images directly as that leads to the neural net to latch onto the specific model characteristics and ignore the other details as the style of the image,etc. By sending the images through the vision transformer, we expect the image to loose such details and expect only the characteristic features inherent to all fake images remain in the embeddings and for that same reason, we do not train the VIT instead we use the pre-trained one. We hope that apon classification on the embeddings which seemingly retain only the features of the image can help generalize better to other models well which we prove in our experimentations.
+
+paper link : https://arxiv.org/abs/2302.10174
+
+The relevent files are present in the paper 2 folder.
+The experimentation is done in the following manner :
+
+step 1) The CLIP VIT L-14 vision transformer was used to convert the input images to embeddings. The embeddings were of 768 dimensions.
+step 2) Using autoencoders, the dimensionality of the high dimesional vector embeddings were reduced to 64 dimensional vector. (they were also reduced to 32 dimensional ones to check the difference in the performance in the later experiments)
+step 3) The 64 dimensional vectors were used to then train a random forest classifier for the task of real vs fake classification.
+
+1000 images of dalle and 1000 real images were used for training the random forest classifier
+
+Results and findings : apon training, we test on different diffusion and gan models just like we did in the previous experiments and we observe much better results. 
+
+diffusion models :- a)glide_50_27 => 92% 
+                    b)guided      => 82%
+                    c)ldm_200     => 97%
+
+GANs models :-      a)biggan           => 98%
+                    b)gaugan           => 100%
+                    c)stargan          => 95%
+                    d)stylegan         => 61%
+                    e)whichfaceisreal  => 62%
+
+We find that despite being trained only on dalle images, the pipeline does well to classify other model images as fake which was a huge limitation in the previous experimentation, however we find that there is a dip in the performance in stylegan and whichfaceisreal. The work needs more refinement as to why the dip occurs in those gans but performs well on all other models, The suspected reason is the train data is not diverse enough to include different types of real images of different objects and materials and since it lacks face images, we suspect that is the reason is has a dip in those images.
+
+further experimentation and future experimentation : we then condense the vectors to 32 dimension vector to check the dip in the performance and we notice similar results with 1-2% change thus condensing the vector to an even smaller vector does not harm in computation compromised scenarios. In future we plan to test on other VITs such as B-16 model, etc.
+
+Conclusion : Thus, we prove that in order to make a SOTA deepfake detector, which is not biased towards any particular model, we must somehow remove the model signatures left in the generation and train the classifier based on only the inherent features of the fake images. In the future as more powerful generators arise with fainter signatures, such universal techniques become crucial to make a robust deepfake detector.
+
